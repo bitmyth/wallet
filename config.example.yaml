@@ -1,0 +1,11 @@
+postgres:
+  host: "postgres"
+  port: 5432
+  user: "postgres"
+  password: "pass"
+  dbname: "mydb"
+  sslmode: "disable"
+redis:
+  addr: redis:6379
+  password: ""
+  db: 0

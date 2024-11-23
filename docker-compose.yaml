@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  api:
+    depends_on:
+      - postgres
+      - redis
+    build: .
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./config.yaml
+        target: /config.yaml
+    networks:
+      - app
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - app
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+      POSTGRES_DB: ${PG_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - app
+
+volumes:
+  postgres_data:
+
+networks:
+  app:
+    driver: bridge

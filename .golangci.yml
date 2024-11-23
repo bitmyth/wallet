@@ -1,0 +1,11 @@
+linters:
+  enable:
+    - revive
+    - errcheck
+    - staticcheck
+    - unused
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      text: "error return value is not checked"

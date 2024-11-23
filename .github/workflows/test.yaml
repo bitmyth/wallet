@@ -1,0 +1,61 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: mydb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.22
+          cache: true
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+      - name: Install Redis CLI
+        run: sudo apt-get install -y redis-tools
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          until pg_isready -h localhost -U postgres; do
+            sleep 1
+          done
+          
+          echo "Waiting for Redis to be ready..."
+          until redis-cli -h localhost ping; do
+            sleep 1
+          done
+      - name: Test
+        run: go test -v ./... | tee test-report.json
+      - name: Upload Go test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: Go-results
+          path: test-report.json
